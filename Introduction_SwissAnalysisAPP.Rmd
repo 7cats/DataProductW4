@@ -1,0 +1,77 @@
+---
+title: "Introduction of SwissAnalysis APP"
+author: "ZixinZhang"
+date: "26/10/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    echo = FALSE,
+    warning = FALSE,
+    message = FALSE)
+```
+
+## Introduction
+
+This is a short presentation of APP **swissAnalysis**. This APP provides simple analysis of the dataset ***swiss***, which contains the information of standardized fertility measure and socio-economic indicators for each of 47 French-speaking provinces of Switzerland at about 1888.  
+
+The APP could be accessed from https://zz7sp.shinyapps.io/swissanalysis  
+  
+The original code of **the APP and this presentation** could be access from https://github.com/7cats/DataProductW4
+
+```{r echo = F}
+library(plotly)
+data(swiss)
+library(ggplot2)
+```
+## Functions of the APP 
+
+This APP has three basic functions:  
+
+1. Plotting the relation between two variables, which are chosen by users.  
+
+2. Generating fitted regression model for the **whole data set**, or a **subset of the dataset** which the users should select from the plot.  
+
+3. Giving the **$R^2$** of fitted regression models.  
+
+## Input and the reactive output
+- If the **box** of ***Fit a regression model*** is ticked, the APP will generate a linear regression model and plot the fitted line. 
+  
+- If **a subset of the data are selected from the plot**, the APP will generate another linear regression model using this subset of data.
+  
+- The **$R^2$** of fitted model will be presented below the plot, when box is ticked and area is selected from the plot.
+
+
+## Example of Fertility and Agriculture:
+If **Fertility** and **Agriculture** are chosen are variables to be analyzed (which is the default setting), and a small area are selected, the APP will present this result.  
+  
+```{r }
+DF <- data.frame(Fertility = swiss$Fertility, Agriculture = swiss$Agriculture)
+p <- ggplot(DF, aes(Fertility, Agriculture)) +
+            geom_point( size = 3) +
+            labs( x = colnames(DF)[1], y = colnames(DF)[2], 
+                  title = paste("Relation between", colnames(DF)[1],
+                                'and', colnames(DF)[2], sep = ' ')) + 
+            theme( plot.title = element_text(hjust = 0.5,
+                                             face = "bold",
+                                             size = 20),
+                   axis.title = element_text(size = 15),
+                   axis.text = element_text(size = 14))
+
+fitLine <- lm(data = DF, Agriculture ~ Fertility)
+pred <- data.frame(Fertility = DF$Fertility, Agriculture = predict(fitLine, DF))
+p <- p + geom_line(data = pred, aes(Fertility, Agriculture),
+                   color = 'orange', lwd = 1.5)
+
+DFSelect <- DF[which((DF$Fertility >= 64) & (DF$Fertility <= 72) & 
+                     (DF$Agriculture <= 75) & (DF$Agriculture >= 46)),]
+fitLineSelect <- lm(data = DFSelect, Agriculture ~ Fertility)
+predSelect <- data.frame(Fertility = DF$Fertility, Agriculture = predict(fitLineSelect, DF))
+
+p <- p + geom_point(data = DFSelect, aes(Fertility, Agriculture),
+                    size = 5, shape = 8) + 
+         geom_line(data = predSelect, aes(Fertility, Agriculture),
+                   color = 'lightblue', lwd = 1.5)
+p
+```
